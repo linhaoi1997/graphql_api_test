@@ -1,9 +1,8 @@
+from graphql_api_object.base_operator.base_data import BaseData
+
 from config import account, password
 from tpmain_api_test import User
 from tpmain_api_test.operators import *
-
-from graphqlapiobject.BaseOperator.base_data import BaseData
-from graphqlapiobject.BaseOperator.base_factory import IdDictBuilder
 
 
 class UserFromCreate:
@@ -19,10 +18,7 @@ class UserFromCreate:
 
 class Data(BaseData):
     admin = User(account, password)
-    company = CompanyFactory(
-        "company", "admin",
-        [], [], filter_has_company=False
-    )
+    company = CompanyFactory("company", "admin")
 
     def setup(self):
         company_: CompanyOperator = self.company
@@ -30,85 +26,29 @@ class Data(BaseData):
 
     root_department = RootDepartment("admin")
 
-    department1 = DepartmentFactory(
-        "department1", "admin",
-        kwargs=[
-            {"key": "parent.id", "attr_name": "root_department", "func": None}
-        ],
-        query_filter=[],
-        is_single=True
-    )
+    department1 = DepartmentFactory("department1", "admin", parent="root_department")
+    department2 = DepartmentFactory("department2", "admin", parent="root_department")
 
-    department2 = DepartmentFactory(
-        "department2", "admin",
-        kwargs=[
-            {"key": "parent.id", "attr_name": "root_department", "func": None}
-        ],
-        query_filter=[],
-        is_single=True
-    )
+    role1 = RoleFactory("role1", "admin")
+    role2 = RoleFactory("role2", "admin")
 
-    role1 = RoleFactory(
-        "role1", "admin",
-        kwargs=[
-            {"key": "company.id", "attr_name": "company", "func": None},
-        ],
-        query_filter=[],
-    )
-    role2 = RoleFactory(
-        "role2", "admin",
-        kwargs=[
-            {"key": "company.id", "attr_name": "company", "func": None},
-        ],
-        query_filter=[],
-    )
-
-    company_admin = CompanyAdminFactory(
-        "company_admin", "admin",
-        kwargs=[
-            {"key": "company.id", "attr_name": "company", "func": None},
-        ],
-        query_filter=[
-            {"key": "companyIDs", "attr_name": "company", "func": IdDictBuilder.id_to_list},
-        ],
-        is_single=True,
-        filter_has_company=False
-    )
-
+    company_admin = CompanyAdminFactory("company_admin", "admin")
     company_admin_user = UserFromCreate("company_admin")
 
-    user1 = UserFactory(
-        "user1",
-        "company_admin_user",
-        kwargs=[
-            {"key": "company.id", "attr_name": "company", "func": None},
-            {"key": "department.id", "attr_name": "department1", "func": None},
-            {"key": "role", "attr_name": "role1", "func": IdDictBuilder.id_to_dict_list},
-        ],
-        query_filter=[],
-        is_single=True,
-    )
+    user1 = UserFactory("user1", "company_admin_user", role="role1", department="department1")
+    user2 = UserFactory("user2", "company_admin_user", role="role2", department="department2")
+    new_user = UserFactory("new_user", "company_admin_user", role="role1", department="department1", is_single=False)
 
-    user2 = UserFactory(
-        "user2",
-        "company_admin_user",
-        kwargs=[
-            {"key": "company.id", "attr_name": "company", "func": None},
-            {"key": "department.id", "attr_name": "department2", "func": None},
-            {"key": "role", "attr_name": "role2", "func": IdDictBuilder.id_to_dict_list},
-        ],
-        query_filter=[],
-        is_single=True,
-    )
 
-    new_user = UserFactory(
-        "new_user",
-        "company_admin_user",
-        kwargs=[
-            {"key": "company.id", "attr_name": "company", "func": None},
-            {"key": "department.id", "attr_name": "department1", "func": None},
-            {"key": "role", "attr_name": "role1", "func": IdDictBuilder.id_to_dict_list},
-        ],
-        query_filter=[],
-        is_single=False,
-    )
+if __name__ == '__main__':
+    data = Data()
+    try:
+        print(data.create_all_resource())
+        id1 = data.new_user.id
+        id2 = data.new_user.id
+        assert id1 != id2
+    except Exception as e:
+        data.company.delete()
+        raise e
+    finally:
+        data.company.delete()

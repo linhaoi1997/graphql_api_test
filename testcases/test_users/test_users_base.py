@@ -1,16 +1,14 @@
-from graphqlapiobject import IdDictBuilder
-
-from graphqlapiobject.BaseOperator.base_test_cases_template import *
+from graphql_api_object.base_operator.base_test_cases_template import *
 import allure
 
-from tpmain_api_test import User
-from tpmain_api_test.operators import UserFactory, UsersQueryOperator
+from tpmain_api_test.apis import Users
+from tpmain_api_test.operators import UsersQueryOperator
 
 
 @allure.feature("用户管理")
 @allure.story("创建用户")
 class TestCreateUser(CreateCasesTemplate):
-    operator = "user1"  # 要更新的对象
+    operator = "new_user"  # 要更新的对象
     assert_jmespath = [
         "account",
         "name",
@@ -25,30 +23,9 @@ class TestCreateUser(CreateCasesTemplate):
 
 
 @allure.feature("用户管理")
-@allure.story("更新用户")
-class TestUpdateUser(UpdateCasesTemplate):
-    create_factory: Type[BaseFactory] = UserFactory  # 创建工厂
-    operator = "user1"  # 要更新的对象
-    update_args: List = [
-        {"key": "department.id", "attr_name": "department2", "func": None},
-        {"key": "role", "attr_name": "role2", "func": IdDictBuilder.id_to_dict_list},
-    ]  # 更新的参数
-    assert_jmespath: List[str or List[str]] = [
-        "name",
-        "department.id",
-        "role[*].id",
-        "phone",
-        "email",
-        "desc",
-        "isActive"
-    ]  # 校验jmespath
-    users: List[User] = ["company_admin_user", "admin"]
-
-
-@allure.feature("用户管理")
 @allure.story("删除用户")
 class TestDeleteUser(DeleteCasesTemplate):
-    operator = "user1"  # 要删除的对象
+    operator = "new_user"  # 要删除的对象
 
 
 @allure.feature("用户管理")
@@ -85,6 +62,9 @@ class TestQueryFilterUsers(QueryFilterCasesTemplate):
 @allure.feature("用户管理")
 @allure.story("查询用户")
 class TestQueryPagingUsers(QueryPagingCasesTemplate):
-    query: BaseQueryOperator = UsersQueryOperator
+    query_api = Users
     user = "company_admin_user"
     resource: str = "new_user"  # base_data中的属性
+
+    def make_query_args(self, data):
+        return {"filter": {"company": {"id": getattr(data, "company").id}}}

@@ -1,5 +1,5 @@
-from graphqlapiobject.BaseOperator import BaseFactory
-from .company_admin_operator import CompanyAdminOperator
+from graphql_api_object import BaseFactory, IdDictBuilder
+from .company_admin_operator import CompanyAdminOperator, EasyPasswordCompanyAdminOperator
 from ...apis.Mutation_apis import CreateCompanyAdminUser
 from ...apis.Query_apis import CompanyAdminUsers
 
@@ -7,9 +7,11 @@ from ...apis.Query_apis import CompanyAdminUsers
 class CompanyAdminFactory(BaseFactory):
     # 创建部分
     create_api = CreateCompanyAdminUser  # 创建调用的接口
-    create_args = ["company.id"]  # 创建默认的参数,基本参数如company id
     # 查询部分
     query_api = CompanyAdminUsers  # 查询的列表接口
+    query_args = [
+        {"attr": "company", "key": "companyIDs", "func": IdDictBuilder.id_to_list},
+    ]
 
     query_path = "data"  # 返回结果中对应的列表路径
     query_field = "account"  # 路径下对应的查找的值
@@ -18,7 +20,18 @@ class CompanyAdminFactory(BaseFactory):
     operator = CompanyAdminOperator
 
     @classmethod
-    def _query_from_list(cls, user, create_api, query_filter):
-        info = super(CompanyAdminFactory, cls)._query_from_list(user, create_api, query_filter)
+    def send_query_request(cls, user, query_filter):
+        if query_filter is None:
+            query_filter = {}
+        final_filter = cls.prepare_query_args(user, query_filter)
+        return cls.query_api(user).set_filter(**final_filter).query_full(limit=100), final_filter
+
+    @classmethod
+    def _query_single(cls, query_api, query_value, create_api):
+        info = super(CompanyAdminFactory, cls)._query_single(query_api, query_value, create_api)
         info["password"] = create_api.result
         return info
+
+
+class EasyPasswordCompanyAdminFactory(CompanyAdminFactory):
+    operator = EasyPasswordCompanyAdminOperator

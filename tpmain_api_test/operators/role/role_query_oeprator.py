@@ -1,4 +1,4 @@
-from graphqlapiobject import BaseQueryOperator
+from graphql_api_object import BaseQueryOperator
 from ...apis.Query_apis import RoleList
 
 

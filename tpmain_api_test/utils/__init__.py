@@ -1,6 +1,6 @@
 from .tools import *
 from .common_object import *
-from graphqlapiobject import BaseUser, GraphqlApi
+from graphql_api_object import BaseUser, GraphqlApi
 from ..schema.platform_schema import Mutation, Query
 import os
 

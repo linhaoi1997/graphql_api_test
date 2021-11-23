@@ -1,4 +1,4 @@
-from graphqlapiobject import GraphqlApi, GraphqlOperationAPi, GraphqlUpdateApi, GraphqlQueryListAPi, GraphqlQueryAPi
+from graphql_api_object import GraphqlApi, GraphqlOperationAPi, GraphqlUpdateApi, GraphqlQueryListAPi, GraphqlQueryAPi
 from ..schema.platform_schema import Mutation
 
 
@@ -256,3 +256,5 @@ class CreateMarketIssue(GraphqlOperationAPi):
 
 class UpdateMarketIssue(GraphqlUpdateApi):
     api = Mutation.update_market_issue
+
+

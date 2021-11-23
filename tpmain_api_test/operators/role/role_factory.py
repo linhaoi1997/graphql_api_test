@@ -1,6 +1,6 @@
 import json
 
-from graphqlapiobject.BaseOperator import BaseFactory
+from graphql_api_object import BaseFactory
 from .role_operator import RoleOperator
 from ...apis.Mutation_apis import CreateRole
 from ...apis.Query_apis import RoleList, PermissionTree
@@ -61,11 +61,9 @@ class MyPermissionTree(PermissionTree):
 class RoleFactory(BaseFactory):
     # 创建部分
     create_api = CreateRole  # 创建调用的接口
-    create_args = ["permissions"]  # 创建默认的参数,基本参数如company id
     # 查询部分
     query_api = RoleList  # 查询的列表接口
 
-    query_path = "data"  # 返回结果中对应的列表路径
     query_field = "name"  # 路径下对应的查找的值
     query_value_path = "name"  # 查找的值等于什么，这个是路径，从create的参数中jmespath搜索
     # 返回操作器部分
@@ -81,28 +79,20 @@ class RoleFactory(BaseFactory):
     def make_args(cls, user, kwargs):
         from copy import copy
         company_id = kwargs.get("company.id")
-        t = MyPermissionTree(user)
-        permissions = []
         permissions_info = copy(cls.base_permission_info)
         permissions_info.update(cls.permission_info)
-        for permission in permissions_info.keys():
-            r = t.search_permission_nodes(permission, company_id)
-            for i in r:
-                if i.id not in [j.id for j in permissions]:
-                    permissions.append(i)
-        permissions_input = cls.return_permission_input(permissions, permissions_info)
-        return {"permissions": permissions_input}
 
-    @classmethod
-    def return_permission_input(cls, permissions, permissions_info):
-        """赋予permission数据权限"""
-        result = []
-        for permission in permissions:
-            for permission_name in permissions_info.keys():
-                if permission_name.endswith(permission.name):
-                    data_range = permissions_info[permission_name]
-                    break
-            else:
-                data_range = "ALL"
-            result.append({"dataRange": data_range, "permission": {"id": permission.id}})
-        return result
+        return return_permissions_input(user, permissions_info, company_id)
+
+
+def return_permissions_input(user, permission_info, company_id):
+    t = MyPermissionTree(user)
+    permissions = []
+    permissions_ids = []
+    for permission, data_permission in permission_info.items():
+        r = t.search_permission_nodes(permission, company_id)
+        for i in r:
+            if i.id not in [j.id for j in permissions_ids]:
+                permissions_ids.append(i)
+                permissions.append({"dataRange": data_permission, "permission": {"id": i.id}})
+    return {"permissions": permissions}

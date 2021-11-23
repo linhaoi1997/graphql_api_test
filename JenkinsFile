@@ -1,0 +1,44 @@
+library 'allure_report_statistics'
+
+
+pipeline {
+    agent {label 'local-master'}
+    parameters {
+        string(name: 'API_USERNAME', defaultValue: 'hh', description: 'user name')
+        string(name: 'API_TOKEN', defaultValue: 'hh', description: 'user token')
+        string(name: 'URL', defaultValue: 'https://www.hhh.com/graphql/', description: 'environment')
+    }
+    stages {
+        stage('Build') {
+            steps {
+                sh '''
+                echo "Build"
+                export LANG=zh_CN.utf8
+                if [ ! -d "/venv" ]; then
+                    python3.9 -m venv venv
+                fi
+                source venv/bin/activate
+                cd tpmain_api_test_new
+                pip install -r requirements.txt
+                '''
+            }
+        }
+        stage('Test') {
+            steps {
+               echo "Test"
+               sh '''
+               source venv/bin/activate
+               cd tpmain_api_test_new
+               pytest -sv testcases -n auto --reruns 1 --dist loadscope --alluredir ./allure-results --clean-alluredir
+               '''
+            }
+        }
+    }
+    post {
+        always {
+            echo "allure and saveReportToDB"
+            allure includeProperties: false, jdk: '', results: [[path: 'tpmain_api_test_new/allure-results']]
+            saveReportToDB()
+        }
+    }
+}

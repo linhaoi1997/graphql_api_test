@@ -1,5 +1,5 @@
 import random
-from graphqlapiobject.BaseOperator import BaseFactory
+from graphql_api_object import BaseFactory
 from .company_operator import CompanyOperator
 from .my_api import MyTypeCompanies
 from ...apis.Mutation_apis import CreateCompany
@@ -12,6 +12,9 @@ class CompanyFactory(BaseFactory):
     create_args = []  # 创建默认的参数,基本参数如company id
     # 查询部分
     query_api = MyTypeCompanies  # 查询的列表接口
+    query_args = []
+
+    default_attr = {}
 
     query_path = "data[].companies[]|"  # 返回结果中对应的列表路径
     query_field = "name"  # 路径下对应的查找的值

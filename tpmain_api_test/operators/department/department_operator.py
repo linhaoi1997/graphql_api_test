@@ -1,11 +1,12 @@
-from graphqlapiobject import BaseOperator
+import logging
 
-from .my_api import MyDepartmentTree
+from graphql_api_object import BaseOperator
+
 from ...apis.Mutation_apis import DeleteDepartment, UpdateDepartment
+from ...apis.Query_apis import DepartmentNameSameAsSiblings
 
 
 class DepartmentOperator(BaseOperator):
-    query_list_api = MyDepartmentTree
     update_api = UpdateDepartment
 
     def detail(self):
@@ -14,3 +15,14 @@ class DepartmentOperator(BaseOperator):
 
     def delete(self):
         return DeleteDepartment(self.user).run(id=self.id)
+
+    def name_exists(self, name: str):
+        logging.info(self.info)
+        return DepartmentNameSameAsSiblings(self.user).run(
+            filter={"name": name, "parent": {"id": self.info["parent"]}}
+        ).result
+
+    def name_exists_with_id(self, name):
+        return DepartmentNameSameAsSiblings(self.user).run(
+            filter={"name": name, "parent": {"id": self.info["parent"]}, "id": self.id}
+        ).result

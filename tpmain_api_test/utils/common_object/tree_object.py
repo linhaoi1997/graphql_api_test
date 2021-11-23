@@ -80,6 +80,9 @@ class TreeObject(object, metaclass=TreeType):
     def __getitem__(self, item):
         return getattr(self, item)
 
+    def get(self, name):
+        return getattr(self, name)
+
 
 class TreeObjectList(object):
     """对于有多个根节点的树使用这个object"""
